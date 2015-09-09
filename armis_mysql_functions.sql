@@ -1,5 +1,5 @@
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `breakLongWord`(_word varchar(1000)) RETURNS varchar(1000) CHARSET latin1
+CREATE  FUNCTION `breakLongWord`(_word varchar(1000)) RETURNS varchar(1000) CHARSET latin1
     DETERMINISTIC
 BEGIN
   DECLARE brokenWord VARCHAR(1000);
@@ -29,7 +29,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameCertificateOfDisposal`(_documentId INT,
+CREATE  FUNCTION `GetNextAgencyNameCertificateOfDisposal`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -54,7 +54,8 @@ WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
 AND  d.mimetype is null
 AND d.id > _documentId
 AND d.rma_declaredAt BETWEEN _dateFrom AND _dateTo
-order by d.id,s.cm_title,a.armis_agencyName, d.cm_name;
+order by d.id,s.cm_title,a.armis_agencyName, d.cm_name
+LIMIT 1;
 
   ELSE
 
@@ -74,7 +75,8 @@ WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
 AND  d.mimetype is null
 AND d.id > _documentId
 AND d.rma_declaredAt = _dateTo
-order by d.id,s.cm_title,a.armis_agencyName, d.cm_name;
+order by d.id,s.cm_title,a.armis_agencyName, d.cm_name
+LIMIT 1;
   END IF;
   
   RETURN nextAgency;
@@ -82,7 +84,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameCOD`(_documentId INT,
+CREATE FUNCTION `GetNextAgencyNameCOD`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -137,7 +139,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`dbadmin`@`192.168.5.%` FUNCTION `GetNextAgencyNameNRI`(_documentId INT,
+CREATE FUNCTION `GetNextAgencyNameNRI`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -231,7 +233,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameNRI_NE`(_documentId INT,
+CREATE FUNCTION `GetNextAgencyNameNRI_NE`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -288,7 +290,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameUM`(_recordNum INT,
+CREATE FUNCTION `GetNextAgencyNameUM`(_recordNum INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
