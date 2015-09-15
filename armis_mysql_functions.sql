@@ -1,7 +1,5 @@
 DELIMITER $$
-
-DROP FUNCTION IF EXISTS `alfrescoreporting`.`breakLongWord`$$
-CREATE FUNCTION  `alfrescoreporting`.`breakLongWord`(_word varchar(1000)) RETURNS varchar(1000) CHARSET latin1
+CREATE DEFINER=`root`@`localhost` FUNCTION `breakLongWord`(_word varchar(1000)) RETURNS varchar(1000) CHARSET latin1
     DETERMINISTIC
 BEGIN
   DECLARE brokenWord VARCHAR(1000);
@@ -27,16 +25,11 @@ BEGIN
   END WHILE;
 
   RETURN _word;
-END;
-
- $$
-
+END$$
 DELIMITER ;
 
 DELIMITER $$
-
-DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameCertificateOfDisposal`$$
-CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameCertificateOfDisposal`(_documentId INT,
+CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameCertificateOfDisposal`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -128,76 +121,109 @@ BEGIN
   -- return CONCAT(nextAgency,'OFFSET:',off,'<> Curr:',currAgencyDocId,'<>','Next:',nextAgencyDocId);
 	
   RETURN nextAgency;
-END;
-
- $$
-
+END$$
 DELIMITER ;
 
 DELIMITER $$
-
-DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameCOD`$$
-CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameCOD`(_documentId INT,
+CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameCOD`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
 BEGIN
   DECLARE nextAgency VARCHAR(225);
+  DECLARE nextAgencyDocId int;
+  DECLARE currAgencyDocId int;
+  DECLARE doc_id int;
+  DECLARE totalCount int;
+  DECLARE counter int;
+  DECLARE nextFlag int;
+  DECLARE off int;
+  SET off = 0;
+  SET nextFlag = 0;
+  SET counter = 0;
+  SET nextAgencyDocId = 0;
+  SET currAgencyDocId = _documentId;
+  -- get total count for all records
+  SELECT count(d.id) into totalCount
+	 from document d
+       inner join site s
+       ON LTRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(d.path, '/Company Home/Sites/rm/documentLibrary/(RM)', -1),'/',1)) = UPPER(s.cm_name)
+       AND d.isLatest = 1 and s.isLatest = 1
+       INNER JOIN agency a
+       ON s.noderef = a.armis_site
+       AND a.isLatest = 1 and s.isLatest = 1
+       INNER JOIN folder f
+       ON d.parent_noderef = f.noderef
+       AND d.isLatest = 1 and f.isLatest = 1
 
-  IF _dateFrom <> _dateTo THEN
-
-select
-a.armis_agencyName into nextAgency
-from document d
-inner join site s
-ON LTRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(d.path, '/Company Home/Sites/rm/documentLibrary/(RM)', -1),'/',1)) = UPPER(s.cm_name)
-AND d.isLatest = 1 and s.isLatest = 1
-INNER JOIN agency a
-ON s.noderef = a.armis_site
-AND a.isLatest = 1 and s.isLatest = 1
-INNER JOIN folder f
-ON d.parent_noderef = f.noderef
-AND d.isLatest = 1 and f.isLatest = 1
-WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
-AND  d.mimetype is null
-AND d.rma_cutOffDate BETWEEN _dateFrom AND _dateTo
-and d.id > _documentId
-order by d.id,  s.cm_title,a.armis_agencyName, CONCAT(d.rma_shelf, ' - ' ,CONCAT(d.rma_box,' - ',d.rma_file)), d.cm_name
-LIMIT 1;
-
-  ELSE
-select
-a.armis_agencyName INTO nextAgency
-from document d
-inner join site s
-ON LTRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(d.path, '/Company Home/Sites/rm/documentLibrary/(RM)', -1),'/',1)) = UPPER(s.cm_name)
-AND d.isLatest = 1 and s.isLatest = 1
-INNER JOIN agency a
-ON s.noderef = a.armis_site
-AND a.isLatest = 1 and s.isLatest = 1
-INNER JOIN folder f
-ON d.parent_noderef = f.noderef
-AND d.isLatest = 1 and f.isLatest = 1
-WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
-AND  d.mimetype is null
-AND d.rma_cutOffDate = _dateTo
-and d.id > _documentId
-order by d.id, s.cm_title,a.armis_agencyName, CONCAT(d.rma_shelf, ' - ' ,CONCAT(d.rma_box,' - ',d.rma_file)), d.cm_name
-LIMIT 1;
-  END IF;
+              WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
+                     and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy')
+                     AND DATE_FORMAT(d.rma_cutOffDate,'%Y-%m-%d') BETWEEN _dateFrom AND _dateTo;
 
 
+    myloop: WHILE counter <= totalCount DO
+    SELECT d.id into doc_id
+
+       from document d
+       inner join site s
+       ON LTRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(d.path, '/Company Home/Sites/rm/documentLibrary/(RM)', -1),'/',1)) = UPPER(s.cm_name)
+       AND d.isLatest = 1 and s.isLatest = 1
+       INNER JOIN agency a
+       ON s.noderef = a.armis_site
+       AND a.isLatest = 1 and s.isLatest = 1
+       INNER JOIN folder f
+       ON d.parent_noderef = f.noderef
+       AND d.isLatest = 1 and f.isLatest = 1
+
+              WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
+                     and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy')
+                     AND DATE_FORMAT(d.rma_cutOffDate,'%Y-%m-%d') BETWEEN _dateFrom AND _dateTo
+			                       order by a.armis_agencyName,
+                                      SUBSTRING(SUBSTRING(d.path, 1, ((LENGTH(d.path) - LENGTH(d.cm_name) - 1))), 40),
+                                      d.rma_cutOffDate LIMIT 1 offset counter;
+		
+        if nextFlag > 0 then
+            SET nextAgencyDocId = doc_id;
+            SET nextFlag = 0;
+            -- LEAVE myloop;
+        end if;
+        
+        if doc_id = _documentId then
+            SET nextFlag = 1;
+            set currAgencyDocId = doc_id;
+            set off = counter;
+		end if;
+        
+        SET counter = counter + 1;
+    END WHILE;
+    
+    /* Perform Search */	  
+	select
+	concat(a.armis_agencyName,'#',SUBSTRING(SUBSTRING(d.path, 1, ((LENGTH(d.path) - LENGTH(d.cm_name) - 1))), 40)) into nextAgency
+	from document d
+	inner join site s
+	ON LTRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(d.path, '/Company Home/Sites/rm/documentLibrary/(RM)', -1),'/',1)) = UPPER(s.cm_name)
+	AND d.isLatest = 1 and s.isLatest = 1
+	inner JOIN agency a
+	ON s.noderef = a.armis_site
+	AND a.isLatest = 1 and s.isLatest = 1
+	INNER JOIN folder f
+	ON d.parent_noderef = f.noderef
+	AND d.isLatest = 1 and f.isLatest = 1
+
+	WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
+  and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy')
+	AND d.id = nextAgencyDocId
+	AND DATE_FORMAT(d.rma_cutOffDate,'%Y-%m-%d') between _dateFrom AND _dateTo
+	order by a.armis_agencyName,  SUBSTRING(SUBSTRING(d.path, 1, ((LENGTH(d.path) - LENGTH(d.cm_name) - 1))), 40), d.rma_cutOffDate
+	LIMIT 1;
+	
   RETURN nextAgency;
-END;
-
- $$
-
+END$$
 DELIMITER ;
 
 DELIMITER $$
-
-DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameNRI`$$
-CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameNRI`(_documentId INT,
+CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameNRI`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -287,16 +313,11 @@ BEGIN
   -- return CONCAT(nextAgency,'OFFSET:',off,'<> Curr:',currAgencyDocId,'<>','Next:',nextAgencyDocId);
 	
   RETURN nextAgency;
-END;
-
- $$
-
+END$$
 DELIMITER ;
 
 DELIMITER $$
-
-DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameNRI_NE`$$
-CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameNRI_NE`(_documentId INT,
+CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameNRI_NE`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -385,16 +406,11 @@ BEGIN
 	LIMIT 1;
 	
   RETURN nextAgency;
-END;
-
- $$
-
+END$$
 DELIMITER ;
 
 DELIMITER $$
-
-DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameUM`$$
-CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameUM`(_recordNum INT,
+CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameUM`(_recordNum INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -478,8 +494,5 @@ LIMIT 1 OFFSET _recordNum;
 
 
   RETURN nextAgency;
-END;
-
- $$
-
+END$$
 DELIMITER ;
