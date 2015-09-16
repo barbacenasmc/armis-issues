@@ -1,5 +1,7 @@
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `breakLongWord`(_word varchar(1000)) RETURNS varchar(1000) CHARSET latin1
+
+DROP FUNCTION IF EXISTS `alfrescoreporting`.`breakLongWord`$$
+CREATE FUNCTION  `alfrescoreporting`.`breakLongWord`(_word varchar(1000)) RETURNS varchar(1000) CHARSET latin1
     DETERMINISTIC
 BEGIN
   DECLARE brokenWord VARCHAR(1000);
@@ -25,11 +27,16 @@ BEGIN
   END WHILE;
 
   RETURN _word;
-END$$
+END;
+
+ $$
+
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameCertificateOfDisposal`(_documentId INT,
+
+DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameCertificateOfDisposal`$$
+CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameCertificateOfDisposal`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -121,11 +128,16 @@ BEGIN
   -- return CONCAT(nextAgency,'OFFSET:',off,'<> Curr:',currAgencyDocId,'<>','Next:',nextAgencyDocId);
 	
   RETURN nextAgency;
-END$$
+END;
+
+ $$
+
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameCOD`(_documentId INT,
+
+DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameCOD`$$
+CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameCOD`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -157,7 +169,7 @@ BEGIN
        AND d.isLatest = 1 and f.isLatest = 1
 
               WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
-                     and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy')
+                     and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy' OR d.rma_recordSearchDispositionActionName='accession')
                      AND DATE_FORMAT(d.rma_cutOffDate,'%Y-%m-%d') BETWEEN _dateFrom AND _dateTo;
 
 
@@ -176,7 +188,7 @@ BEGIN
        AND d.isLatest = 1 and f.isLatest = 1
 
               WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
-                     and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy')
+                     and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy' OR d.rma_recordSearchDispositionActionName='accession')
                      AND DATE_FORMAT(d.rma_cutOffDate,'%Y-%m-%d') BETWEEN _dateFrom AND _dateTo
 			                       order by a.armis_agencyName,
                                       SUBSTRING(SUBSTRING(d.path, 1, ((LENGTH(d.path) - LENGTH(d.cm_name) - 1))), 40),
@@ -212,18 +224,23 @@ BEGIN
 	AND d.isLatest = 1 and f.isLatest = 1
 
 	WHERE d.path like '/Company Home/Sites/rm/documentLibrary/(RM)%'
-  and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy')
+  and (d.rma_recordSearchDispositionActionName='transfer' OR d.rma_recordSearchDispositionActionName='destroy' OR d.rma_recordSearchDispositionActionName='accession')
 	AND d.id = nextAgencyDocId
 	AND DATE_FORMAT(d.rma_cutOffDate,'%Y-%m-%d') between _dateFrom AND _dateTo
 	order by a.armis_agencyName,  SUBSTRING(SUBSTRING(d.path, 1, ((LENGTH(d.path) - LENGTH(d.cm_name) - 1))), 40), d.rma_cutOffDate
 	LIMIT 1;
 	
   RETURN nextAgency;
-END$$
+END;
+
+ $$
+
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameNRI`(_documentId INT,
+
+DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameNRI`$$
+CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameNRI`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -313,11 +330,16 @@ BEGIN
   -- return CONCAT(nextAgency,'OFFSET:',off,'<> Curr:',currAgencyDocId,'<>','Next:',nextAgencyDocId);
 	
   RETURN nextAgency;
-END$$
+END;
+
+ $$
+
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameNRI_NE`(_documentId INT,
+
+DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameNRI_NE`$$
+CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameNRI_NE`(_documentId INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -406,11 +428,16 @@ BEGIN
 	LIMIT 1;
 	
   RETURN nextAgency;
-END$$
+END;
+
+ $$
+
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` FUNCTION `GetNextAgencyNameUM`(_recordNum INT,
+
+DROP FUNCTION IF EXISTS `alfrescoreporting`.`GetNextAgencyNameUM`$$
+CREATE FUNCTION  `alfrescoreporting`.`GetNextAgencyNameUM`(_recordNum INT,
                                     _dateFrom date,
                                     _dateTo date) RETURNS varchar(225) CHARSET latin1
     DETERMINISTIC
@@ -494,5 +521,8 @@ LIMIT 1 OFFSET _recordNum;
 
 
   RETURN nextAgency;
-END$$
+END;
+
+ $$
+
 DELIMITER ;
