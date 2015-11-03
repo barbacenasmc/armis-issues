@@ -54,7 +54,7 @@ BEGIN
 
        from document
        where sys_node_uuid = document_node_id
-         and path like '/Company Home/Sites/rm/documentLibrary/(RM)%';
+         and path like '/Company Home/Sites%';
 
 
    -- get agency details
@@ -64,7 +64,7 @@ BEGIN
           armis_telephoneNo,
           armis_email,
           armis_address,
-          S.cm_name
+          s.cm_name
             into agencyName,
                  department,
                  sectionName,
