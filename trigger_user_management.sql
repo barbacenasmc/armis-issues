@@ -46,7 +46,7 @@ BEGIN
 
    -- get document details
    SELECT
-       IF(cm_title<>'', cm_title, cm_name),
+       cm_name,
        path
 
        into document_accessed,
