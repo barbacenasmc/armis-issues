@@ -15,8 +15,9 @@ BEGIN
    DECLARE access_username_person varchar(1000);
    DECLARE designation varchar(1000);
    DECLARE document_accessed_action varchar(1000);
-
-
+   DECLARE designationCount int;
+   DECLARE counter int;
+   DECLARE designationTemp varchar(1000);
    DECLARE agencyNameWithDash varchar(1000);
    DECLARE agencyName varchar(1000);
    DECLARE department varchar(1000);
@@ -83,13 +84,34 @@ BEGIN
           from person
           where cm_userName = access_username
           LIMIT 1;
+		  
+   -- get count of person designation
+   SELECT count(groupDisplayName) into designationCount
+          FROM groups g where userName = access_username
+		  AND designationTag =1;
+   
+   if designationCount > 0 then
+     SET counter = 0;
+     WHILE designationCount > 0 DO
+       if counter > 0 then
+          SELECT groupDisplayName into designationTemp
+          FROM groups g where userName = access_username
+	    	  AND designationTag =1
+          limit 1 offset counter;
+          SELECT CONCAT(designationTemp,', ',designation) into designation;
+       else
+          SELECT groupDisplayName into designation
+          FROM groups g where userName = access_username
+	    	  AND designationTag =1
+          limit 1;
+       end if;
 
-   -- get person designation
-   SELECT siteRole into designation
-          from siteperson
-          where agencyNameWithDash = UPPER(siteName)
-          and userName = access_username;
-
+       SET counter = counter + 1;
+       SET designationCount = designationCount - 1;
+     END WHILE;
+   else
+      SET designation = 'N/A';
+   end if;
    IF document_accessed is not null then
    -- Insert access details
    INSERT into usermanagement_report
@@ -116,7 +138,7 @@ BEGIN
     document_accessed,
     document_accessed_action,
     access_username_person,
-    designation,
+    UPPER(designation),
     date_accessed
    );
    end if;        
