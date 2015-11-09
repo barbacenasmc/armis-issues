@@ -1,5 +1,7 @@
 ﻿DELIMITER $$
 
+drop trigger IF EXISTS alfresco_access_after_insert$$
+
 CREATE TRIGGER alfresco_access_after_insert
 AFTER INSERT
    ON alfresco_access FOR EACH ROW
@@ -25,6 +27,9 @@ BEGIN
    DECLARE telephoneNo varchar(1000);
    DECLARE email varchar(1000);
    DECLARE address varchar(1000);
+   DECLARE deleteTimeStamp varchar(100);
+   DECLARE deleteUser varchar(100);
+   DECLARE transactionType varchar(100);
 
    -- Find new message id and use it to filter other data
    SELECT NEW.id INTO access_id;
@@ -34,16 +39,36 @@ BEGIN
      alfresco_access_transaction_uuid,
      alfresco_access_transaction_user,
      `timestamp`,
-     alfresco_access_transaction_action
+     `timestamp`,
+     alfresco_access_transaction_action,
+     username,
+     alfresco_access_transaction_type
 
        into document_node_id,
             access_username,
             date_accessed,
-            document_accessed_action
+            deleteTimeStamp,
+            document_accessed_action,
+            deleteUser,
+            transactionType
 
        from alfresco_access
-       where id = access_id
-         and alfresco_access_transaction_type = 'cm:content';
+       where id = access_id;
+   -- if transaction is delete
+   IF document_accessed_action = 'DELETE' then
+   SELECT
+     alfresco_access_transaction_uuid, username
+
+       into document_node_id, access_username
+
+       from alfresco_access
+       where id < access_id
+         and `timestamp` < deleteTimeStamp
+         and  username = deleteUser
+         order by `timestamp` desc
+         limit 1;
+
+   end if;
 
    -- get document details
    SELECT
@@ -54,8 +79,7 @@ BEGIN
             document_path
 
        from document
-       where sys_node_uuid = document_node_id
-         and path like '/Company Home/Sites%';
+       where sys_node_uuid = document_node_id and path like '/Company Home/Sites%';
 
 
    -- get agency details
@@ -112,6 +136,7 @@ BEGIN
    else
       SET designation = 'N/A';
    end if;
+
    IF document_accessed is not null then
    -- Insert access details
    INSERT into usermanagement_report
@@ -141,6 +166,5 @@ BEGIN
     UPPER(designation),
     date_accessed
    );
-   end if;        
-
-END; $$
+   end if;
+END $$
