@@ -34,7 +34,7 @@ BEGIN
    -- Find new message id and use it to filter other data
    SELECT NEW.id INTO access_id;
 
-   -- get access details
+  -- get access details
    SELECT
      alfresco_access_transaction_uuid,
      alfresco_access_transaction_user,
@@ -65,11 +65,12 @@ BEGIN
        where id < access_id
          and `timestamp` < deleteTimeStamp
          and  username = deleteUser
+         and alfresco_access_transaction_path like  '/app:company_home/st:sites/%'
          order by `timestamp` desc
          limit 1;
 
    end if;
-
+   
    -- get document details
    SELECT
        cm_name,
@@ -113,7 +114,7 @@ BEGIN
    SELECT count(groupDisplayName) into designationCount
           FROM groups g where userName = access_username
 		  AND designationTag =1;
-   
+
    if designationCount > 0 then
      SET counter = 0;
      WHILE designationCount > 0 DO
@@ -151,7 +152,8 @@ BEGIN
     `action`,
     `username`,
     `designation`,
-    `date_accessed`
+    `date_accessed`,
+    `doc_uuid`
    )VALUES
    (
     agencyName,
@@ -164,7 +166,8 @@ BEGIN
     document_accessed_action,
     access_username_person,
     UPPER(designation),
-    date_accessed
+    date_accessed,
+    document_node_id
    );
    end if;
 END $$
