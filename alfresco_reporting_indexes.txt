@@ -1,0 +1,10 @@
+ALTER TABLE `alfrescoreporting`.`document` MODIFY COLUMN `isLatest` TINYINT(1),
+ DROP INDEX `Index_2`,
+ ADD INDEX `Index_2` USING BTREE(`mimetype`, `cm_name`, `path`, `isLatest`);
+ 
+ ALTER TABLE `alfrescoreporting`.`agency` MODIFY COLUMN `isLatest` TINYINT(1),
+ ADD INDEX `Index_2`(`isLatest`, `armis_site`, `armis_agencyName`);
+ 
+
+ALTER TABLE `alfrescoreporting`.`site` MODIFY COLUMN `isLatest` TINYINT(1),
+ ADD INDEX `Index_2`(`noderef`, `isLatest`, `cm_name`);
