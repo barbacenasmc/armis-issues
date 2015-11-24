@@ -1,18 +1,18 @@
 CREATE TABLE `alfrescoreporting`.`usermanagement_report` (
   `id` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
-  `armis_agencyName`,
-  `armis_department`,
-  `armis_sectionName`,
-  `armis_telephoneNo`,
-  `armis_email`,
-  `armis_address`,
-  `document_accessed`,
-  `action`,
-  `username`,
-  `designation`,
-  `date_accessed`,
+  `armis_agencyName` varchar(1000) not null,
+  `armis_department` varchar(1000) not null,
+  `armis_sectionName` varchar(1000) not null,
+  `armis_telephoneNo` varchar(1000) not null,
+  `armis_email` varchar(1000) not null,
+  `armis_address` varchar(1000) not null,
+  `document_accessed` varchar(1000) not null,
+  `action` varchar(1000) not null,
+  `username` varchar(1000) not null,
+  `designation` varchar(1000) not null,
+  `date_accessed` varchar(1000) not null,
+  `doc_uuid`  varchar(1000) not null,
   PRIMARY KEY(`id`)
 )
 ENGINE = InnoDB;
 
-ALTER TABLE `alfrescoreporting`.`usermanagement_report` ADD COLUMN `doc_uuid` VARCHAR(100) AFTER `date_accessed`;
