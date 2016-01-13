@@ -9,3 +9,15 @@ git status
 git commit -m "update jndi connection"
 git push origin master
 git status
+git status
+git add .
+git commit -m "  Fix Unknown Database Alfresco in document tracking report
+    * Document tracking per Agency
+    * Document tracking per designation
+    * Document Tracking per user
+"
+git push origin master
+git push origin master
+git status
+git pull origin master
+git pull origin master
