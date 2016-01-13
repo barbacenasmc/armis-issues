@@ -26,8 +26,9 @@ BEGIN
        INTO
            wf_proc_inst_id, wf_document_noderef
        FROM workflowpackage where id = wf_Id;
+   IF wf_document_noderef IS NOT NULL THEN
 
-   WHILE comma_index > 0 DO
+     WHILE comma_index > 0 DO
        -- check if the wf documents are more than 1
        SELECT LOCATE(',',wf_document_noderef) into comma_index;
 
@@ -43,6 +44,7 @@ BEGIN
            INSERT INTO documenttracking_report(`wf_document_node_ref`, `wf_proc_id`)
              VALUES(wf_document_noderef, wf_proc_inst_id);
        END IF;
-   END WHILE;
+     END WHILE;
+   END IF;
 
 END $$
